@@ -1,5 +1,4 @@
-# Dependencies AeroFlow
-# Version fixe pour compatibilite NumPy 1.x avec OpenCV
+
 numpy>=2.0.0
 opencv-python>=4.8.0
 ultralytics>=8.0.0
