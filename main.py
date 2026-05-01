@@ -1,12 +1,13 @@
-"""
-AeroFlow - Version ultra-optimisée pour fluidité maximale
-"""
+
 
 import argparse
 import time
 import cv2
 import signal
 import sys
+import os
+import json
+import datetime
 import config
 from src.acquisition.camera_stream import CameraStream
 from src.acquisition.network_comm import NetworkServer, NetworkClient
@@ -35,6 +36,9 @@ class AeroFlowApp:
             self.client = NetworkClient(master_ip)
 
         self.is_running = False
+        self.session_start_time = time.time()
+        self.session_start_iso = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+        self.session_records = []
         signal.signal(signal.SIGINT, self.signal_handler)
 
     def signal_handler(self, sig, frame):
@@ -89,6 +93,14 @@ class AeroFlowApp:
                     last_prediction = self.predictor.predict("linear")
                     last_trend = self.predictor.get_trend()
 
+                    self.session_records.append({
+                        "timestamp": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+                        "local_count": int(count_a),
+                        "remote_count": int(self.remote_count),
+                        "total_count": int(total_count),
+                        "prediction": None if last_prediction is None else float(last_prediction),
+                        "trend": last_trend
+                    })
                 # Annotation simple et rapide
                 annotated = self.tracker.draw_detections(frame, bboxes, count_a)
                 annotated = FrameAnnotator.annotate_frame(
@@ -161,6 +173,10 @@ class AeroFlowApp:
                 if current_time - last_send_time >= config.SAMPLING_INTERVAL:
                     self.client.send_count(count_b)
                     last_send_time = current_time
+                    self.session_records.append({
+                        "timestamp": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+                        "local_count": int(count_b)
+                    })
 
                 annotated = self.tracker.draw_detections(frame, bboxes, count_b)
                 annotated = FrameAnnotator.annotate_frame(
@@ -199,11 +215,41 @@ class AeroFlowApp:
             self.server.stop()
             self.dashboard.close()
 
+        self.save_session_data()
+
         cv2.destroyAllWindows()
         for _ in range(5):
             cv2.waitKey(1)
 
         print("Programme termine.")
+
+    def save_session_data(self):
+        if not self.session_records:
+            print("Aucune donnée de session à enregistrer.")
+            return
+
+        os.makedirs(config.DATA_DIR, exist_ok=True)
+
+        filename = f"session_{self.mode}_{self.camera_id}_{self.session_start_iso.replace(':', '-')}.json"
+        filepath = os.path.join(config.DATA_DIR, filename)
+
+        session_data = {
+            "mode": self.mode,
+            "camera_id": self.camera_id,
+            "master_ip": self.master_ip,
+            "start_time": self.session_start_iso,
+            "end_time": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+            "duration_seconds": round(time.time() - self.session_start_time, 2),
+            "sample_count": len(self.session_records),
+            "records": self.session_records,
+        }
+
+        try:
+            with open(filepath, "w", encoding="utf-8") as f:
+                json.dump(session_data, f, indent=2, ensure_ascii=False)
+            print(f"Données de session enregistrées dans : {filepath}")
+        except Exception as e:
+            print(f"Erreur lors de l'enregistrement des données de session : {e}")
 
 
 def main():
