@@ -1,0 +1,16 @@
+ap_id,name,zone,x,y,threshold
+AP-CHECKIN-01,Check-in Hall A,Check-in,8,55,80
+AP-CHECKIN-02,Check-in Hall B,Check-in,18,55,80
+AP-SECURITY-01,Security Lane 1,Security,33,60,50
+AP-SECURITY-02,Security Lane 2,Security,33,45,50
+AP-FOOD-01,Food Court – Main,Food Court,50,68,110
+AP-FOOD-02,Food Court – Annex,Food Court,58,68,75
+AP-LOUNGE-01,Business Lounge,Lounge,52,38,35
+AP-GATE-A1,Gate A1,Gates A,72,80,130
+AP-GATE-A2,Gate A2,Gates A,80,80,130
+AP-GATE-A3,Gate A3,Gates A,88,80,130
+AP-GATE-B1,Gate B1,Gates B,72,42,110
+AP-GATE-B2,Gate B2,Gates B,80,42,110
+AP-ARRIVALS-01,Arrivals Hall,Arrivals,15,22,90
+AP-BAGGAGE-01,Baggage Claim 1,Arrivals,22,14,80
+AP-BAGGAGE-02,Baggage Claim 2,Arrivals,30,14,80
